@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Paint &amp; Seek</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="assets/logo-icon.png" />
+<link rel="apple-touch-icon" href="assets/logo-icon.png" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div id="toast"></div>
+
+<div id="challenge-modal" class="modal-overlay hidden">
+  <div class="modal-card">
+    <p id="challenge-modal-text">Someone is challenging you!</p>
+    <div class="modal-actions">
+      <button id="challenge-decline" class="btn btn-ghost">Decline</button>
+      <button id="challenge-accept" class="btn btn-primary">Accept</button>
+    </div>
+  </div>
+</div>
+
+<!-- HOME -->
+<section id="screen-home" class="screen screen-home">
+  <div class="home-layout">
+    <div class="home-col home-left">
+      <div class="brandmark">
+        <img class="logo-img" src="assets/logo.png" alt="Paint & Seek logo" />
+        <h1>Paint &amp; Seek</h1>
+        <p class="tagline">Camouflage your character into a wildly complex room. Blend in perfectly and you're invisible.</p>
+      </div>
+
+      <div class="card hidden" id="shop-card">
+        <h3 class="card-title">Shop</h3>
+        <p class="hint-inline">Unlocks are permanent — pick your loadout in the room lobby afterward.</p>
+        <div id="shop-list" class="stack"></div>
+      </div>
+    </div>
+
+    <div class="home-col home-right">
+      <div class="card" id="account-card">
+        <div id="account-logged-out">
+          <div class="stack">
+            <label class="field">
+              <span>Username</span>
+              <input id="auth-username" maxlength="16" placeholder="Rembrandt99" autocomplete="username" />
+            </label>
+            <label class="field">
+              <span>Password</span>
+              <input id="auth-password" type="password" maxlength="72" placeholder="••••••••" autocomplete="current-password" />
+            </label>
+            <div class="row-gap">
+              <button id="btn-login" class="btn btn-primary">Log in</button>
+              <button id="btn-register" class="btn btn-ghost">Create account</button>
+            </div>
+            <p class="hint-inline">Log in to earn 💎 diamonds for winning matches and spend them on upgrades. You can also just play as a guest below.</p>
+          </div>
+        </div>
+        <div id="account-logged-in" class="hidden">
+          <div class="account-summary">
+            <div class="account-summary-left">
+              <div class="account-name-row">
+                <span id="account-name" class="account-name"></span>
+                <button id="btn-logout" class="btn btn-ghost btn-small">Log out</button>
+              </div>
+              <p id="account-rank" class="account-rank"></p>
+            </div>
+            <div class="account-actions">
+              <button id="btn-open-shop" class="btn btn-ghost btn-small">💎 Shop</button>
+              <span id="account-balance" class="account-balance">💎 0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card hidden" id="friends-card">
+        <h3 class="card-title">Friends &amp; Ranked</h3>
+        <div class="row-gap">
+          <input id="friend-add-input" maxlength="16" placeholder="Add friend by username" />
+          <button id="btn-friend-add" class="btn btn-ghost">Add</button>
+        </div>
+        <div id="friend-requests" class="stack"></div>
+        <div id="friend-list" class="stack"></div>
+      </div>
+
+      <div class="card">
+        <label class="field">
+          <span>Your name</span>
+          <input id="name-input" maxlength="16" placeholder="Rembrandt" autocomplete="off" />
+        </label>
+
+        <div id="home-actions" class="stack">
+          <button id="btn-show-create" class="btn btn-primary">Create a room</button>
+          <button id="btn-show-join" class="btn btn-ghost">Join a room</button>
+        </div>
+
+        <div id="join-fields" class="stack hidden">
+          <label class="field">
+            <span>Room code</span>
+            <input id="code-input" maxlength="4" placeholder="ABCD" autocomplete="off" style="text-transform:uppercase; letter-spacing:.2em; font-family:'Space Mono',monospace;" />
+          </label>
+          <div class="row-gap">
+            <button id="btn-join" class="btn btn-primary">Join</button>
+            <button id="btn-cancel-join" class="btn btn-ghost">Back</button>
+          </div>
+        </div>
+      </div>
+
+      <p class="hint">Up to 4 players &middot; same room code, any device</p>
+    </div>
+  </div>
+</section>
+
+<!-- LOBBY -->
+<section id="screen-lobby" class="screen hidden">
+  <div class="tube-label">
+    <span class="tube-eyebrow">Room code</span>
+    <span id="lobby-code" class="tube-code">ABCD</span>
+    <button id="btn-copy-code" class="btn-copy" title="Copy code">copy</button>
+  </div>
+  <p id="lobby-diamonds" class="hint-inline hidden">💎 0</p>
+
+  <div class="card">
+    <h2 class="section-title">Painters ready</h2>
+    <div id="lobby-players" class="player-chip-list"></div>
+
+    <p class="hint-inline">Roles are assigned automatically when the game starts &mdash; hiders paint themselves to disappear into the room, seekers hunt them down once time's up.</p>
+
+    <div id="map-picker" class="map-picker hidden">
+      <label for="map-select" class="section-title">Map</label>
+      <select id="map-select" class="map-select"></select>
+      <div id="map-preview-grid" class="map-preview-grid"></div>
+      <p id="map-picker-note" class="hint-inline hidden"></p>
+    </div>
+
+    <p id="lobby-hint" class="hint">Waiting for the host to start&hellip;</p>
+    <button id="btn-start" class="btn btn-primary hidden">Start the game</button>
+    <button id="btn-ranked-ready" class="btn btn-primary hidden">Ready up</button>
+  </div>
+
+  <div id="loadout-card" class="card hidden">
+    <h2 class="section-title">Loadout</h2>
+    <p class="hint-inline">Cosmetics you've unlocked. All 3 brushes are available in-game already. Cosmetics auto-hide while you're actively hiding.</p>
+    <div class="loadout-row">
+      <span class="field-label">Hat</span>
+      <div id="hat-row" class="loadout-btn-row">
+        <button class="loadout-btn selected" data-hat="">None</button>
+        <button class="loadout-btn hidden" data-hat="tophat">🎩 Top hat</button>
+        <button class="loadout-btn hidden" data-hat="partyhat">🥳 Party hat</button>
+      </div>
+    </div>
+    <div class="loadout-row">
+      <span class="field-label">Trail</span>
+      <div id="trail-row" class="loadout-btn-row">
+        <button class="loadout-btn selected" data-trail="">None</button>
+        <button class="loadout-btn hidden" data-trail="sparkle">✨ Sparkle</button>
+        <button class="loadout-btn hidden" data-trail="confetti">🎊 Confetti</button>
+      </div>
+    </div>
+  </div>
+
+  <button id="btn-leave-lobby" class="btn btn-text">Leave room</button>
+</section>
+
+<!-- GAME -->
+<section id="screen-game" class="screen screen-game-full hidden">
+  <div class="game-shell">
+    <div class="game-top-bar">
+      <span class="hud-code" id="game-code">ABCD</span>
+      <span class="hud-phase" id="game-phase">Hiding</span>
+      <span class="hud-role" id="hud-role"></span>
+      <div class="hud-timer" id="game-timer">0:20</div>
+      <span class="hud-right"><span id="game-remaining">4</span> hiders left</span>
+      <span class="hud-diamonds hidden" id="hud-diamonds">💎 0</span>
+      <button id="btn-give-up" class="btn btn-ghost btn-give-up hidden">🏳️ Give up</button>
+      <button id="btn-open-paint" class="btn btn-primary btn-paint-toggle hidden">🎨 Paint yourself</button>
+    </div>
+
+    <div class="game-main">
+      <aside class="side-panel side-left panel-visible" id="panel-powers">
+        <span class="field-label">Power-ups</span>
+        <p class="hint-inline">Spend diamonds any time — each use costs diamonds again next time.</p>
+        <div id="powers-list" class="powers-list"></div>
+      </aside>
+
+      <div class="canvas-wrap-full">
+        <canvas id="game-canvas"></canvas>
+        <div id="banner" class="banner hidden"></div>
+        <div id="hiding-cover" class="hiding-cover hidden">
+          <div class="hiding-cover-inner">
+            <div class="hiding-cover-icon">🙈</div>
+            <p>No peeking! Hiders are painting themselves in.</p>
+            <p class="hiding-cover-timer" id="hiding-cover-timer">0:20</p>
+          </div>
+        </div>
+      </div>
+
+      <aside class="side-panel side-right" id="panel-paint">
+        <span class="field-label">You, up close</span>
+        <p class="hint-inline">Draw directly on yourself &middot; tap the surroundings to pick up a color</p>
+
+        <div class="brush-info">
+          <span class="field-label">Brush</span>
+          <div class="brush-row-inline">
+            <div id="brush-preview" class="brush-preview"></div>
+            <input id="color-picker" type="color" value="#6B3F69" title="Custom brush color" />
+          </div>
+        </div>
+
+        <div class="brush-type-picker">
+          <span class="field-label">Type</span>
+          <div class="brush-size-row" id="ingame-brush-type-row">
+            <button class="size-btn selected" data-brush="pencil" title="Pencil">✏️</button>
+            <button class="size-btn" data-brush="sponge" title="Sponge — blends colors to the average, the longer you hold">🧽</button>
+            <button class="size-btn" data-brush="spray" title="Spray can — thin translucent coat, builds up the longer you hold">💨</button>
+          </div>
+        </div>
+
+        <div class="brush-size-picker">
+          <span class="field-label">Size</span>
+          <div class="brush-size-row" id="brush-size-row">
+            <button class="size-btn selected" data-size="1">S</button>
+            <button class="size-btn" data-size="3">M</button>
+            <button class="size-btn" data-size="6">L</button>
+            <button class="size-btn" data-size="10">XL</button>
+          </div>
+        </div>
+
+        <div id="swatches" class="swatches"></div>
+
+        <div class="paint-row">
+          <button id="btn-undo" class="btn btn-ghost btn-small" disabled title="Undo">↶ Undo</button>
+          <button id="btn-redo" class="btn btn-ghost btn-small" disabled title="Redo">↷ Redo</button>
+        </div>
+        <div class="paint-row">
+          <button id="btn-reset-skin" class="btn btn-ghost btn-small">Reset</button>
+        </div>
+      </aside>
+
+    </div>
+
+    <div class="game-bottom-bar">
+      <div id="player-strip" class="player-strip"></div>
+      <p class="hint-inline hint-center" id="move-hint">Arrow keys / WASD to move</p>
+    </div>
+  </div>
+</section>
+
+<!-- RESULTS -->
+<section id="screen-results" class="screen hidden">
+  <h2 class="section-title" id="results-outcome">Results</h2>
+  <div id="results-ranked-summary" class="results-section hidden"></div>
+  <div class="results-section" id="results-hiders-section">
+    <h3 class="results-heading">Hiders</h3>
+    <div id="results-hiders" class="results-list"></div>
+  </div>
+  <div class="results-section" id="results-seekers-section">
+    <h3 class="results-heading">Seekers</h3>
+    <div id="results-seekers" class="results-list"></div>
+  </div>
+  <div class="stack">
+    <button id="btn-rematch" class="btn btn-primary hidden">Rematch</button>
+    <p id="rematch-status" class="hint-inline hidden"></p>
+    <button id="btn-play-again" class="btn btn-ghost hidden">Back to lobby</button>
+    <button id="btn-leave-results" class="btn btn-ghost">Leave room</button>
+  </div>
+</section>
+
+<script src="game.js"></script>
+</body>
+</html>
